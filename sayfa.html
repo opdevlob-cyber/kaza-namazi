@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kaza Namazı Tracker</title>
+  <title>Kaza Namazı Tracker + Webhook</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -26,9 +26,10 @@
       padding: 25px 30px;
       border-radius: 15px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-      max-width: 400px;
+      max-width: 450px;
       width: 100%;
       text-align: center;
+      margin-bottom: 20px;
     }
 
     input[type="number"] {
@@ -46,13 +47,33 @@
       border-radius: 10px;
       border: none;
       cursor: pointer;
-      background: #3498db;
       color: white;
       transition: background 0.3s;
+      margin: 5px;
     }
 
-    button:hover {
+    .primary {
+      background: #3498db;
+    }
+
+    .primary:hover {
       background: #2980b9;
+    }
+
+    .success {
+      background: #27ae60;
+    }
+
+    .success:hover {
+      background: #219a52;
+    }
+
+    .warning {
+      background: #e67e22;
+    }
+
+    .warning:hover {
+      background: #d35400;
     }
 
     .display {
@@ -65,60 +86,251 @@
       color: #2c3e50;
     }
 
+    .status {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .status.success {
+      background: #d5f4e6;
+      color: #27ae60;
+      border: 1px solid #27ae60;
+    }
+
+    .status.error {
+      background: #fadbd8;
+      color: #e74c3c;
+      border: 1px solid #e74c3c;
+    }
+
+    .status.loading {
+      background: #ebf5fb;
+      color: #3498db;
+      border: 1px solid #3498db;
+    }
+
+    .history {
+      text-align: left;
+      margin-top: 15px;
+    }
+
+    .history-item {
+      padding: 8px;
+      border-bottom: 1px solid #ecf0f1;
+      font-size: 14px;
+    }
+
     footer {
       margin-top: 30px;
       font-size: 14px;
       color: #7f8c8d;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
-  <h1>Kaza Namazı Tracker</h1>
+  <h1>🕌 Kaza Namazı Tracker</h1>
   
   <div class="card">
     <p>Kaç kaza namazınız var?</p>
-    <input type="number" id="kazaSayisi" placeholder="Örn: 3">
+    <input type="number" id="kazaSayisi" placeholder="Örn: 3" min="0">
     <br>
-    <button id="kaydetBtn">Kaydet</button>
+    
+    <button class="primary" id="kaydetBtn">💾 Yerel Kaydet</button>
+    <button class="success" id="webhookBtn">🌐 Webhook'a Gönder</button>
+    <button class="warning" id="herIkisiBtn">🚀 Her İkisine Kaydet</button>
+
+    <div id="statusMessage"></div>
 
     <div class="display" id="goster">Henüz kayıt yok</div>
+
+    <!-- Geçmiş Kayıtlar -->
+    <div class="history" id="gecmisKayitlar" style="display: none;">
+      <h3>📋 Geçmiş Kayıtlar:</h3>
+      <div id="gecmisListesi"></div>
+    </div>
   </div>
 
-  <footer>Veriler tarayıcı hafızasında (LocalStorage) saklanır ve webhook ile gönderilir.</footer>
+  <footer>
+    ✅ Veriler tarayıcı hafızasında (LocalStorage) saklanır<br>
+    🌐 Webhook entegrasyonu ile buluta senkronize edilir
+  </footer>
 
   <script>
-    const button = document.getElementById('kaydetBtn');
-    const gosterEl = document.getElementById('goster');
-    const webhookURL = "https://opdev.app.n8n.cloud/webhook-test/test-message";
+    class KazaNamaziTracker {
+      constructor() {
+        this.webhookUrl = 'https://opdev.app.n8n.cloud/webhook-test/test-message';
+        this.init();
+      }
 
-    function goster() {
-      const kayitli = localStorage.getItem('kazaNamazi');
-      gosterEl.innerText = kayitli ? `${kayitli} kaza namazı kaydedildi` : "Henüz kayıt yok";
+      init() {
+        this.bindEvents();
+        this.goster();
+        this.gecmisiGoster();
+      }
+
+      bindEvents() {
+        document.getElementById('kaydetBtn').addEventListener('click', () => {
+          this.yerelKaydet();
+        });
+
+        document.getElementById('webhookBtn').addEventListener('click', () => {
+          this.webhookGonder();
+        });
+
+        document.getElementById('herIkisiBtn').addEventListener('click', () => {
+          this.herIkisineKaydet();
+        });
+
+        // Enter tuşu desteği
+        document.getElementById('kazaSayisi').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            this.herIkisineKaydet();
+          }
+        });
+      }
+
+      getSayi() {
+        const sayi = document.getElementById('kazaSayisi').value;
+        if (!sayi || parseInt(sayi) < 0) {
+          this.showStatus('Lütfen geçerli bir sayı girin!', 'error');
+          return null;
+        }
+        return parseInt(sayi);
+      }
+
+      async yerelKaydet() {
+        const sayi = this.getSayi();
+        if (sayi === null) return;
+
+        try {
+          // Yerel storage'a kaydet
+          const kayit = {
+            sayi: sayi,
+            tarih: new Date().toLocaleString('tr-TR'),
+            tip: 'yerel'
+          };
+
+          localStorage.setItem('kazaNamazi', sayi);
+          this.kayitGecmiseEkle(kayit);
+          this.goster();
+          this.showStatus('✅ Yerel kayıt başarılı!', 'success');
+        } catch (error) {
+          this.showStatus('❌ Yerel kayıt başarısız: ' + error.message, 'error');
+        }
+      }
+
+      async webhookGonder() {
+        const sayi = this.getSayi();
+        if (sayi === null) return;
+
+        this.showStatus('⏳ Webhook\'a gönderiliyor...', 'loading');
+
+        try {
+          const response = await fetch(this.webhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              kazaNamazi: sayi,
+              kullanici: 'opdevlob-cyber',
+              tarih: new Date().toISOString(),
+              platform: 'github-pages'
+            })
+          });
+
+          if (response.ok) {
+            const kayit = {
+              sayi: sayi,
+              tarih: new Date().toLocaleString('tr-TR'),
+              tip: 'webhook'
+            };
+
+            this.kayitGecmiseEkle(kayit);
+            this.showStatus('✅ Webhook\'a başarıyla gönderildi!', 'success');
+          } else {
+            throw new Error(`HTTP ${response.status}`);
+          }
+        } catch (error) {
+          this.showStatus('❌ Webhook gönderimi başarısız: ' + error.message, 'error');
+        }
+      }
+
+      async herIkisineKaydet() {
+        const sayi = this.getSayi();
+        if (sayi === null) return;
+
+        // Önce yerel kaydet
+        await this.yerelKaydet();
+        
+        // Sonra webhook'a gönder
+        await this.webhookGonder();
+      }
+
+      goster() {
+        const kayitli = localStorage.getItem('kazaNamazi');
+        const gosterEl = document.getElementById('goster');
+        gosterEl.innerText = kayitli ? 
+          `📊 ${kayitli} kaza namazı kaydedildi` : 
+          "Henüz kayıt yok";
+      }
+
+      kayitGecmiseEkle(kayit) {
+        let gecmis = JSON.parse(localStorage.getItem('kazaGecmisi') || '[]');
+        
+        gecmis.unshift(kayit);
+        
+        // Son 10 kaydı tut
+        if (gecmis.length > 10) {
+          gecmis = gecmis.slice(0, 10);
+        }
+        
+        localStorage.setItem('kazaGecmisi', JSON.stringify(gecmis));
+        this.gecmisiGoster();
+      }
+
+      gecmisiGoster() {
+        const gecmis = JSON.parse(localStorage.getItem('kazaGecmisi') || '[]');
+        const gecmisEl = document.getElementById('gecmisListesi');
+        const containerEl = document.getElementById('gecmisKayitlar');
+
+        if (gecmis.length > 0) {
+          containerEl.style.display = 'block';
+          gecmisEl.innerHTML = gecmis.map(kayit => `
+            <div class="history-item">
+              <strong>${kayit.sayi} namaz</strong> - 
+              ${kayit.tarih} - 
+              ${kayit.tip === 'yerel' ? '📱 Yerel' : '🌐 Webhook'}
+            </div>
+          `).join('');
+        } else {
+          containerEl.style.display = 'none';
+        }
+      }
+
+      showStatus(message, type) {
+        const statusEl = document.getElementById('statusMessage');
+        statusEl.innerHTML = `<div class="status ${type}">${message}</div>`;
+        
+        // 5 saniye sonra mesajı temizle
+        setTimeout(() => {
+          statusEl.innerHTML = '';
+        }, 5000);
+      }
     }
 
-    button.addEventListener('click', () => {
-      const sayi = document.getElementById('kazaSayisi').value;
-      if(sayi && parseInt(sayi) >= 0) {
-        // LocalStorage'a kaydet
-        localStorage.setItem('kazaNamazi', sayi);
-        goster();
+    // Uygulamayı başlat
+    const tracker = new KazaNamaziTracker();
 
-        // Webhook'a gönder
-        fetch(webhookURL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ kazaNamazi: sayi })
-        })
-        .then(res => console.log('Webhook cevabı:', res.status))
-        .catch(err => console.error('Webhook hatası:', err));
-
-      } else {
-        alert("Lütfen geçerli bir sayı girin!");
-      }
-    });
-
-    window.onload = goster;
+    // Sayfa yüklendiğinde çalıştır
+    window.onload = () => {
+      tracker.goster();
+      tracker.gecmisiGoster();
+    };
   </script>
 
 </body>
