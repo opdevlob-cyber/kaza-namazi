@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8n Webhook Yorum Formu</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .description {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #7f8c8d;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info-box {
+            background-color: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>n8n Webhook Yorum Formu</h1>
+        
+        <div class="info-box">
+            <p>Bu form, n8n webhook'una veri göndermek için tasarlanmıştır. Lütfen aşağıdaki formu doldurun ve gönderin.</p>
+        </div>
+        
+        <form id="commentForm">
+            <div class="form-group">
+                <label for="name">Adınız *</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">E-posta Adresiniz *</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="rating">Değerlendirme</label>
+                <select id="rating" name="rating">
+                    <option value="5">★★★★★ - Mükemmel</option>
+                    <option value="4">★★★★☆ - İyi</option>
+                    <option value="3">★★★☆☆ - Orta</option>
+                    <option value="2">★★☆☆☆ - Zayıf</option>
+                    <option value="1">★☆☆☆☆ - Kötü</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="comment">Yorumunuz *</label>
+                <textarea id="comment" name="comment" required placeholder="Lütfen yorumunuzu buraya yazın..."></textarea>
+            </div>
+            
+            <button type="submit">Yorumu Gönder</button>
+        </form>
+        
+        <div id="responseMessage" class="response"></div>
+    </div>
+    
+    <footer>
+        <p>Bu form n8n webhook'una veri göndermek için tasarlanmıştır.</p>
+    </footer>
+
+    <script>
+        document.getElementById('commentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Form verilerini topla
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                rating: document.getElementById('rating').value,
+                comment: document.getElementById('comment').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Webhook URL'si - Bu URL'yi kendi n8n webhook URL'nizle değiştirin
+            const webhookUrl = 'https://opdev.app.n8n.cloud/webhook-test/test-message';
+            
+            // Gönder butonunu devre dışı bırak
+            const submitButton = document.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Gönderiliyor...';
+            
+            // Webhook'a veri gönder
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Webhook isteği başarısız oldu');
+                }
+            })
+            .then(data => {
+                // Başarılı yanıt
+                showResponse('Yorumunuz başarıyla gönderildi! Teşekkür ederiz.', 'success');
+                document.getElementById('commentForm').reset();
+            })
+            .catch(error => {
+                // Hata durumu
+                console.error('Hata:', error);
+                showResponse('Yorumunuz gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.', 'error');
+            })
+            .finally(() => {
+                // Butonu tekrar etkinleştir
+                submitButton.disabled = false;
+                submitButton.textContent = 'Yorumu Gönder';
+            });
+        });
+        
+        function showResponse(message, type) {
+            const responseElement = document.getElementById('responseMessage');
+            responseElement.textContent = message;
+            responseElement.className = 'response ' + type;
+            responseElement.style.display = 'block';
+            
+            // 5 saniye sonra mesajı gizle
+            setTimeout(() => {
+                responseElement.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
