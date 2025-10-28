@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kompleks & Özellikli HTML Demo</title>
+  <meta name="description" content="Modern, interaktif ve tek dosyalık HTML şablonu — dark mode, modal, filter, slider, chart ve daha fazlası." />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --bg: #0f1724;
+      --panel: #0b1220;
+      --muted: #94a3b8;
+      --accent: linear-gradient(90deg,#7c3aed,#06b6d4);
+      --glass: rgba(255,255,255,0.04);
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(2,6,23,0.6);
+      --glass-2: rgba(255,255,255,0.03);
+      color-scheme: dark;
+    }
+    [data-theme="light"]{
+      --bg: #f7fafc;
+      --panel: #ffffff;
+      --muted: #475569;
+      --accent: linear-gradient(90deg,#4f46e5,#06b6d4);
+      --glass: rgba(15,23,42,0.02);
+      --glass-2: rgba(2,6,23,0.03);
+      --shadow: 0 8px 20px rgba(2,6,23,0.08);
+      color-scheme: light;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",sans-serif;background:var(--bg);color:#e6eef8}
+
+    /* Layout */
+    .container{max-width:1200px;margin:36px auto;padding:24px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;border-radius:10px;background:var(--accent);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;font-weight:800}
+    nav{display:flex;gap:12px;align-items:center}
+    a.button{padding:10px 14px;border-radius:10px;background:var(--glass);text-decoration:none;color:inherit;font-weight:600;border:1px solid rgba(255,255,255,0.03)}
+
+    /* Hero */
+    .hero{display:grid;grid-template-columns:1fr 420px;gap:24px;margin-top:28px}
+    .hero-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:28px;border-radius:18px;box-shadow:var(--shadow);}
+    h1{margin:0;font-size:28px}
+    p.lead{color:var(--muted);margin-top:8px}
+
+    /* Quick stats */
+    .stats{display:flex;gap:12px;margin-top:18px}
+    .stat{flex:1;padding:12px;border-radius:12px;background:var(--panel);border:1px solid var(--glass-2)}
+    .stat h3{margin:0;font-size:14px}
+    .stat p{margin:6px 0 0;font-weight:700}
+
+    /* Cards grid */
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:24px}
+    .card{background:var(--panel);padding:16px;border-radius:14px;border:1px solid var(--glass-2)}
+
+    /* Portfolio with filter */
+    .filters{display:flex;gap:8px;border-radius:12px;padding:8px;background:var(--glass);}
+    .chips button{border:0;background:transparent;padding:8px 12px;border-radius:10px;color:var(--muted);cursor:pointer}
+    .chips button.active{background:var(--accent);color:white}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal{width:100%;max-width:720px;background:var(--panel);padding:20px;border-radius:12px;border:1px solid var(--glass-2)}
+
+    /* Gallery */
+    .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .gallery img{width:100%;height:140px;object-fit:cover;border-radius:8px}
+
+    /* Footer */
+    footer{margin-top:32px;padding:18px;border-radius:12px;background:var(--panel);display:flex;justify-content:space-between;align-items:center}
+
+    /* Responsive */
+    @media (max-width:980px){.hero{grid-template-columns:1fr} .gallery{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:560px){.gallery{grid-template-columns:1fr} .logo{width:36px;height:36px}}
+
+    /* Minor animations */
+    .fade-in{animation:fadeIn .6s ease both}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+    /* Slider */
+    .slider{position:relative;overflow:hidden;border-radius:12px}
+    .slides{display:flex;transition:transform .45s cubic-bezier(.2,.9,.2,1)}
+    .slide{min-width:100%;padding:18px}
+
+    /* small helpers */
+    .muted{color:var(--muted);font-size:13px}
+    input,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--glass-2);background:transparent;color:inherit}
+    .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:var(--accent);color:white;font-weight:600;text-decoration:none;border:none;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div id="app" data-theme>
+    <div class="container">
+      <header>
+        <div class="brand">
+          <div class="logo">DA</div>
+          <div>
+            <div style="font-weight:700">Devlop A — Showcase</div>
+            <div class="muted" style="font-size:12px">Kompleks HTML demo · Tek dosya</div>
+          </div>
+        </div>
+        <nav>
+          <a class="button" href="#features">Özellikler</a>
+          <a class="button" href="#portfolio">Portfolyo</a>
+          <a class="button" id="openModal">İletişim</a>
+          <button class="button" id="themeToggle">Tema</button>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-card fade-in">
+            <h1>Modern, Interaktif ve Erişilebilir<br><small style="font-weight:600;color:var(--muted)">Tek dosya — üretime hazır</small></h1>
+            <p class="lead">Bu demo; dark/light tema, modal form, filtreli portfolyo, slider, küçük dashboard grafiği, localStorage ile tercih kaydetme ve erişilebilirlik düşünülerek hazırlandı.</p>
+
+            <div class="stats">
+              <div class="stat">
+                <h3>Projeler</h3>
+                <p>28</p>
+              </div>
+              <div class="stat">
+                <h3>Aktif Ziyaretçi</h3>
+                <p id="liveCount">—</p>
+              </div>
+              <div class="stat">
+                <h3>Uptime</h3>
+                <p>99.98%</p>
+              </div>
+            </div>
+
+            <div class="grid">
+              <div class="card">
+                <h4>Hızlı Başlangıç</h4>
+                <p class="muted">Tek dosyada bile profesyonel özellikler ekleyebilirsin. Kod sade ve yorumlu tutuldu.</p>
+                <div style="margin-top:12px"><button class="btn" id="visitBtn">Canlı Önizleme</button></div>
+              </div>
+              <div class="card">
+                <h4>Temalar</h4>
+                <p class="muted">Kullanıcı tercihi localStorage'da saklanır. Tema düğmesine tıklayarak değiştir.</p>
+              </div>
+              <div class="card">
+                <h4>Analiz</h4>
+                <canvas id="miniChart" height="120"></canvas>
+              </div>
+            </div>
+
+          </div>
+
+          <aside class="hero-card fade-in">
+            <h3 style="margin-top:0">Portfolyo Örneği</h3>
+            <div class="filters" style="margin-bottom:12px">
+              <div class="chips" id="chipList">
+                <button data-filter="all" class="active">Tümü</button>
+                <button data-filter="ui">UI</button>
+                <button data-filter="api">API</button>
+                <button data-filter="automation">Otomasyon</button>
+              </div>
+            </div>
+
+            <div id="portfolio" class="gallery">
+              <img data-type="ui" src="https://picsum.photos/seed/a/600/400" alt="Proje UI 1">
+              <img data-type="api" src="https://picsum.photos/seed/b/600/400" alt="Proje API 1">
+              <img data-type="automation" src="https://picsum.photos/seed/c/600/400" alt="Proje Otomasyon 1">
+              <img data-type="ui" src="https://picsum.photos/seed/d/600/400" alt="Proje UI 2">
+              <img data-type="api" src="https://picsum.photos/seed/e/600/400" alt="Proje API 2">
+              <img data-type="automation" src="https://picsum.photos/seed/f/600/400" alt="Proje Otomasyon 2">
+            </div>
+
+            <div style="margin-top:12px;display:flex;gap:8px">
+              <button class="btn" id="prevSlide">◀</button>
+              <button class="btn" id="nextSlide">▶</button>
+            </div>
+
+            <div style="margin-top:12px" class="muted">Kaydırıcı ve küçük galeri — mobil uyumlu.</div>
+          </aside>
+        </section>
+
+        <section style="margin-top:22px">
+          <h2 id="features">Gelişmiş Özellikler</h2>
+          <div class="grid">
+            <div class="card">
+              <h4>Erişilebilirlik</h4>
+              <p class="muted">Tuş navigasyonu, anlamlı alt metinler ve kontrast düşünülmüştür.</p>
+            </div>
+            <div class="card">
+              <h4>Local pref</h4>
+              <p class="muted">Tema ve küçük tercihler LocalStorage'da saklanır—geri geldiğinde hatırlanır.</p>
+            </div>
+            <div class="card">
+              <h4>Modal İletişim</h4>
+              <p class="muted">E-posta doğrulama ve küçük ön kontrol JS ile sağlanır.</p>
+            </div>
+          </div>
+        </section>
+
+        <section style="margin-top:20px">
+          <div class="card">
+            <h3>Müşteri Görüşleri</h3>
+            <div class="slider" id="testi">
+              <div class="slides" id="slides">
+                <div class="slide">
+                  <strong>Ali V.</strong>
+                  <p class="muted">"Hızlı, güvenilir ve temiz kod — projemiz çok hızlandı."</p>
+                </div>
+                <div class="slide">
+                  <strong>Zeynep K.</strong>
+                  <p class="muted">"İletişim çok iyi, taleplerimize hızlı cevap verdiler."</p>
+                </div>
+                <div class="slide">
+                  <strong>Mehmet T.</strong>
+                  <p class="muted">"Otomasyon iş akışımız sayesinde hata oranı düştü."</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <footer>
+        <div class="muted">© 2025 Devlop A · Demo</div>
+        <div>
+          <small class="muted">Performans: <span id="perf">—</span></small>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-backdrop" id="modal">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <h3 id="modalTitle">İletişim & Teklif</h3>
+        <p class="muted">Kısa bir mesaj bırak — demo amaçlı form, veri sunucuya gönderilmez.</p>
+        <form id="contactForm">
+          <label>İsim<input name="name" required placeholder="Adınız"></label>
+          <label style="margin-top:8px">E-posta<input name="email" type="email" required placeholder="mail@ornek.com"></label>
+          <label style="margin-top:8px">Mesaj<textarea name="msg" rows="4" placeholder="Kısa bir mesaj"></textarea></label>
+          <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
+            <button type="button" class="button" id="closeModal">Kapat</button>
+            <button class="btn" type="submit">Gönder</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- Tema yönetimi ---
+    const app = document.getElementById('app');
+    const themeToggle = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('demo_theme');
+    function applyTheme(t){
+      if(t === 'light') app.setAttribute('data-theme','light');
+      else app.removeAttribute('data-theme');
+    }
+    applyTheme(savedTheme);
+    themeToggle.addEventListener('click',()=>{
+      const current = app.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      const next = current === 'light' ? 'dark' : 'light';
+      applyTheme(next === 'light' ? 'light' : null);
+      localStorage.setItem('demo_theme', next === 'light' ? 'light' : 'dark');
+    });
+
+    // --- Canlı ziyaretçi simülasyonu (basit) ---
+    const liveCount = document.getElementById('liveCount');
+    function updateLive(){
+      const val = Math.floor(10 + Math.random()*150);
+      liveCount.textContent = val;
+    }
+    updateLive(); setInterval(updateLive,5000);
+
+    // --- Mini Chart ---
+    const ctx = document.getElementById('miniChart').getContext('2d');
+    const miniChart = new Chart(ctx,{
+      type:'line',
+      data:{labels:['Pzt','Sal','Çrş','Prş','Cum','Cmt','Paz'],datasets:[{label:'Ziyaret',data:Array.from({length:7},()=>Math.floor(20+Math.random()*200)),fill:true,tension:0.4}]},
+      options:{plugins:{legend:{display:false}},scales:{x:{display:true,ticks:{color:getComputedStyle(document.documentElement).getPropertyValue('--muted')||'#94a3b8'}},y:{display:false}}}
+    });
+
+    // --- Portfolio filtreleme ---
+    const chips = document.querySelectorAll('#chipList button');
+    const items = document.querySelectorAll('#portfolio img');
+    chips.forEach(ch=>ch.addEventListener('click',()=>{
+      chips.forEach(c=>c.classList.remove('active'));
+      ch.classList.add('active');
+      const f = ch.dataset.filter;
+      items.forEach(it=>{
+        if(f==='all' || it.dataset.type===f) it.style.display='block'; else it.style.display='none';
+      });
+    }));
+
+    // --- Modal ---
+    const modal = document.getElementById('modal');
+    document.getElementById('openModal').addEventListener('click',()=>{modal.style.display='flex';document.querySelector('#modal input[name=name]').focus();});
+    document.getElementById('closeModal').addEventListener('click',()=>{modal.style.display='none'});
+    modal.addEventListener('click',e=>{if(e.target===modal) modal.style.display='none'});
+    document.getElementById('contactForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      const data = new FormData(e.target);
+      // demo: validasyon
+      const email = data.get('email');
+      if(!/^\S+@\S+\.\S+$/.test(email)){alert('Geçerli bir e-posta girin');return}
+      alert('Teşekkürler '+data.get('name')+" — mesajınız gönderildi (demo).")
+      modal.style.display='none';
+    });
+
+    // --- Basit slider ---
+    let idx=0; const slides=document.getElementById('slides');
+    function showSlide(i){ idx = (i+3)%3; slides.style.transform = `translateX(${-idx*100}%)`; }
+    document.getElementById('nextSlide').addEventListener('click',()=>showSlide(idx+1));
+    document.getElementById('prevSlide').addEventListener('click',()=>showSlide(idx-1));
+    setInterval(()=>showSlide(idx+1),4000);
+
+    // --- Performans örneği ---
+    window.addEventListener('load',()=>{
+      const perf = (window.performance && performance.timing) ? Math.max(0, performance.now()).toFixed(0) + 'ms' : '—';
+      document.getElementById('perf').textContent = perf;
+    });
+
+    // Visit butonu küçük demo
+    document.getElementById('visitBtn').addEventListener('click',()=>{
+      alert('Bu bir demo butonudur — gerçek bir route yok.');
+    });
+
+    // Accessibility: keyboard shortcut to open modal (g)
+    window.addEventListener('keydown',e=>{ if(e.key==='g') { document.getElementById('openModal').click(); } });
+
+    // Save last seen timestamp
+    localStorage.setItem('demo_seen_at',new Date().toISOString());
+  </script>
+</body>
+</html>
