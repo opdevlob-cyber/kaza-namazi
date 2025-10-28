@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kaza Namazı Tracker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    input[type="number"] {
+      width: 60%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: #3498db;
+      color: white;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #2980b9;
+    }
+
+    .display {
+      margin-top: 20px;
+      background: #ecf0f1;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Kaza Namazı Tracker</h1>
+  
+  <div class="card">
+    <p>Kaç kaza namazınız var?</p>
+    <input type="number" id="kazaSayisi" placeholder="Örn: 3">
+    <br>
+    <button id="kaydetBtn">Kaydet</button>
+
+    <div class="display" id="goster">Henüz kayıt yok</div>
+  </div>
+
+  <footer>Veriler tarayıcı hafızasında (LocalStorage) saklanır.</footer>
+
+  <script>
+    const button = document.getElementById('kaydetBtn');
+    const gosterEl = document.getElementById('goster');
+
+    function goster() {
+      const kayitli = localStorage.getItem('kazaNamazi');
+      gosterEl.innerText = kayitli ? `${kayitli} kaza namazı kaydedildi` : "Henüz kayıt yok";
+    }
+
+    button.addEventListener('click', () => {
+      const sayi = document.getElementById('kazaSayisi').value;
+      if(sayi && parseInt(sayi) >= 0) {
+        localStorage.setItem('kazaNamazi', sayi);
+        goster();
+      } else {
+        alert("Lütfen geçerli bir sayı girin!");
+      }
+    });
+
+    window.onload = goster;
+  </script>
+
+</body>
+</html>
