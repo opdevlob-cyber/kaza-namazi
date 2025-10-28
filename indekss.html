@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Kaza Namazı Hesaplama</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; text-align: center; }
+    input, button { padding: 10px; margin: 5px; font-size: 16px; }
+    ul { text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>Kaza Namazı Hesaplama</h1>
+  <p>Kaç namaz kaza ettiniz? Sayıyı girin:</p>
+  <input type="number" id="kazaSayisi" placeholder="Örn: 3">
+  <button onclick="kaydet()">Kaydet</button>
+
+  <h2>Kayıtlı Kaza Namazı Sayısı:</h2>
+  <p id="goster">Henüz kayıt yok</p>
+
+  <script>
+    function kaydet() {
+      const sayi = document.getElementById('kazaSayisi').value;
+      if(sayi) {
+        localStorage.setItem('kazaNamazi', sayi);
+        goster();
+      } else {
+        alert("Lütfen bir sayı girin!");
+      }
+    }
+
+    function goster() {
+      const kayitli = localStorage.getItem('kazaNamazi');
+      document.getElementById('goster').innerText = kayitli ? kayitli : "Henüz kayıt yok";
+    }
+
+    window.onload = goster;
+  </script>
+</body>
+</html>
