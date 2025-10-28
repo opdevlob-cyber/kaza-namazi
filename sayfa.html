@@ -85,11 +85,12 @@
     <div class="display" id="goster">Henüz kayıt yok</div>
   </div>
 
-  <footer>Veriler tarayıcı hafızasında (LocalStorage) saklanır.</footer>
+  <footer>Veriler tarayıcı hafızasında (LocalStorage) saklanır ve webhook ile gönderilir.</footer>
 
   <script>
     const button = document.getElementById('kaydetBtn');
     const gosterEl = document.getElementById('goster');
+    const webhookURL = "https://opdev.app.n8n.cloud/webhook-test/test-message";
 
     function goster() {
       const kayitli = localStorage.getItem('kazaNamazi');
@@ -99,8 +100,19 @@
     button.addEventListener('click', () => {
       const sayi = document.getElementById('kazaSayisi').value;
       if(sayi && parseInt(sayi) >= 0) {
+        // LocalStorage'a kaydet
         localStorage.setItem('kazaNamazi', sayi);
         goster();
+
+        // Webhook'a gönder
+        fetch(webhookURL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kazaNamazi: sayi })
+        })
+        .then(res => console.log('Webhook cevabı:', res.status))
+        .catch(err => console.error('Webhook hatası:', err));
+
       } else {
         alert("Lütfen geçerli bir sayı girin!");
       }
